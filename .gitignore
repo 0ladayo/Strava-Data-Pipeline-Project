@@ -1,0 +1,23 @@
+# Environment variables
+.env
+
+# Terraform state and variables
+terraform/terraform.tfvars
+terraform/.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Secrets
+data ingestion/service_key.json
+
+# Python virtual environment
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# State files
+data ingestion/extract/state.json
+
+# IDE configuration
+.vscode/ 
