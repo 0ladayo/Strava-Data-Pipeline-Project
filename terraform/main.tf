@@ -167,13 +167,12 @@ resource "google_secret_manager_secret_version" "client_secret_value" {
   secret = google_secret_manager_secret.client_secret_container.id
 
   secret_data = jsonencode({
-    strava_client_id = var.client_id
+    strava_client_id     = var.client_id
     strava_client_secret = var.client_secret
-    refresh_token = var.refresh_token
-    project_id = var.gcp_project_id
-    gcs_bucket_name = var.gcs_bucket_name
-    gcs_bucket_name_II = var.gcs_bucket_name_II
-    table_id = var.table_id
+    refresh_token        = var.refresh_token
+    gcs_bucket_name      = var.gcs_bucket_name
+    gcs_bucket_name_II   = var.gcs_bucket_name_II
+    table_id             = var.table_id
   })
 }
 
