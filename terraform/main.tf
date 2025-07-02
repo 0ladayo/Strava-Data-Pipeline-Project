@@ -154,3 +154,31 @@ resource "google_bigquery_table" "default" {
 ]
 EOF
 }
+
+resource "google_secret_manager_secret" "client_secret_container" {
+  project   = var.gcp_project_id
+  secret_id = "${var.secret_manager_id}-${var.gcp_project_id}"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "client_secret_value" {
+  secret = google_secret_manager_secret.client_secret_container.id
+
+  secret_data = jsonencode({
+    strava_client_id = var.client_id
+    strava_client_secret = var.client_secret
+    refresh_token = var.refresh_token
+    project_id = var.gcp_project_id
+    gcs_bucket_name = var.gcs_bucket_name
+    gcs_bucket_name_II = var.gcs_bucket_name_II
+    table_id = var.table_id
+  })
+}
+
+resource "google_secret_manager_secret_iam_member" "secret_accessor" {
+  secret_id = google_secret_manager_secret.client_secret_container.id
+  member    = "serviceAccount:${var.service_account_email}"
+  role      = "roles/secretmanager.secretAccessor"
+}

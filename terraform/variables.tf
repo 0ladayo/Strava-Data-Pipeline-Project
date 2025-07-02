@@ -49,3 +49,26 @@ variable "service_account_email" {
   description = "The email of the service account to grant permissions to."
   type        = string
 }
+
+variable "secret_manager_id" {
+  description = "The base ID for the Secret Manager secret."
+  type        = string
+}
+
+variable "client_id" {
+  description = "The Strava client ID."
+  type        = string
+  sensitive   = true
+}
+
+variable "client_secret" {
+  description = "The Strava client secret."
+  type        = string
+  sensitive   = true
+}
+
+variable "refresh_token" {
+  description = "The Strava refresh token."
+  type        = string
+  sensitive   = true
+}
