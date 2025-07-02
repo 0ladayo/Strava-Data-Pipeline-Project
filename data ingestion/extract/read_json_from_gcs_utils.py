@@ -17,4 +17,4 @@ def read_json_from_gcs(bucket_name, file_path):
         return data
     except Exception as e:
         print(f"Error reading JSON from GCS: {e}")
-        return None
+        raise
