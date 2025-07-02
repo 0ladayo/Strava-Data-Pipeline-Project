@@ -1,6 +1,6 @@
 import os
 import sys
-from dotenv import load_dotenv
+from utils.secrets import access_secret_version, get_required_secret
 from google.cloud import storage
 from numpy import append
 import pandas as pd
@@ -8,11 +8,13 @@ from google.cloud import bigquery
 import pandas_gbq
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../service_key.json'
-load_dotenv('../../.env')
 
-GCS_BUCKET_NAME = os.getenv('gcs_bucket_name')
-PROJECT_ID = os.getenv('gcp_project_id')
-TABLE_ID = os.getenv('table_id')
+PROJECT_ID  = "strava-project-463820"
+SECRET_ID = "secret_manager_id-strava-project-463820"
+secrets = access_secret_version(PROJECT_ID, SECRET_ID, version_id = "latest")
+
+GCS_BUCKET_NAME = get_required_secret(secrets, "gcs_bucket_name")
+TABLE_ID =get_required_secret(secrets, "table_id")
 
 storage_client = storage.Client()
 bigquery_client = bigquery.Client()

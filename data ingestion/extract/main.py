@@ -1,6 +1,6 @@
 import os
 import sys
-from dotenv import load_dotenv, set_key
+from utils.secrets import access_secret_version, get_required_secret
 import gcsfs
 from datetime import datetime, timedelta
 from read_json_from_gcs_utils import read_json_from_gcs
@@ -13,21 +13,16 @@ from write_to_gcs_utils import write_to_gcs
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../service_key.json'
 
-env_file_path = '../../.env'
-load_dotenv(env_file_path)
+project_id = "strava-project-463820"
+secret_id = "secret_manager_id-strava-project-463820"
 
-def get_required_env_var(var_name: str) -> str:
-    """Gets a required environment variable or raises an error."""
-    value = os.getenv(var_name)
-    if value is None:
-        raise ValueError(f'Required Environment Variable {var_name} is not set.')
-    return value
+secrets = access_secret_version(project_id, secret_id, version_id = "latest")
 
-STRAVA_CLIENT_ID = int(get_required_env_var('strava_client_id'))
-STRAVA_CLIENT_SECRET = get_required_env_var('strava_client_secret')
-REFRESH_TOKEN = get_required_env_var('refresh_token')
-GCS_BUCKET_NAME = get_required_env_var('gcs_bucket_name')
-GCS_BUCKET_NAME_II = get_required_env_var('gcs_bucket_name_ii')
+STRAVA_CLIENT_ID = int(get_required_secret(secrets, "strava_client_id"))
+STRAVA_CLIENT_SECRET = get_required_secret(secrets, "strava_client_secret")
+REFRESH_TOKEN = get_required_secret(secrets, "refresh_token")
+GCS_BUCKET_NAME = get_required_secret(secrets, "gcs_bucket_name")
+GCS_BUCKET_NAME_II = get_required_secret(secrets, "gcs_bucket_name_II")
 
 state_data = read_json_from_gcs(GCS_BUCKET_NAME_II, "state.json")
 

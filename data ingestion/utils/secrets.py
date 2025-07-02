@@ -18,3 +18,10 @@ def access_secret_version(project_id, secret_id, version_id = "latest"):
     except Exception as e:
         print(f'error accessing secret: {e}')
         raise
+
+def get_required_secret(secrets, secret_name):
+    """Gets a required secret credentials or raises an error."""
+    value = secrets.get(secret_name)
+    if value is None:
+        raise ValueError(f'Required secret {secret_name} is not set in secret manager.')
+    return value
