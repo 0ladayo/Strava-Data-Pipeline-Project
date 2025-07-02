@@ -3,9 +3,6 @@ import json
 
 def upload_json_object_to_gcs(bucket_name, destination_blob_name, json_object):
     """Uploads a JSON object to a Google Cloud Storage bucket.
-
-    Returns:
-        bool: True if upload is successful, False otherwise.
     """
     try:
         storage_client = storage.Client()
@@ -14,7 +11,6 @@ def upload_json_object_to_gcs(bucket_name, destination_blob_name, json_object):
         json_string = json.dumps(json_object, indent=2)
         blob.upload_from_string(json_string, content_type='application/json')
         print(f"JSON object uploaded to gs://{bucket_name}/{destination_blob_name}")
-        return True
     except Exception as e:
         print(f"Failed to upload JSON object to GCS: {e}")
-        return False
+        raise
