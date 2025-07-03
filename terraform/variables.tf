@@ -72,3 +72,14 @@ variable "refresh_token" {
   type        = string
   sensitive   = true
 }
+
+variable "function_1" {
+  description = "The first extract and load function."
+  type        = string
+  sensitive   = true
+}
+
+variable "gcs_bucket_name_III"{
+    type = string
+    description = "Name of the Third Google Cloud Storage Bucket"
+}

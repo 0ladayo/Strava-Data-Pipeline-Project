@@ -27,12 +27,6 @@ resource "google_storage_bucket" "static_ii" {
   uniform_bucket_level_access = true
 }
 
-resource "google_storage_bucket_object" "state" {
-  name   = var.state_file_gcs_name
-  source = var.state_file_local_path
-  bucket = google_storage_bucket.static_ii.name
-}
-
 resource "google_storage_bucket_iam_member" "static_iam" {
   bucket = google_storage_bucket.static.name
   role   = "roles/storage.objectAdmin"
@@ -180,4 +174,51 @@ resource "google_secret_manager_secret_iam_member" "secret_accessor" {
   secret_id = google_secret_manager_secret.client_secret_container.id
   member    = "serviceAccount:${var.service_account_email}"
   role      = "roles/secretmanager.secretAccessor"
+}
+
+resource "google_storage_bucket" "static_iii" {
+  name          = "${var.gcs_bucket_name_III}-${var.gcp_project_id}"
+  location      = var.gcp_project_region
+  storage_class = "STANDARD"
+  uniform_bucket_level_access = true
+}
+
+data "archive_file" "default" {
+  type        = "zip"
+  output_path = "${path.module}/function-source.zip"
+  source_dir  = "../cloud_functions/extract/"
+  excludes = [
+    "**/__pycache__",
+    "**/*.pyc"
+  ]
+}
+
+resource "google_storage_bucket_object" "function_source_zip" {
+  name   = "function-source.zip"
+  source = data.archive_file.default.output_path
+  bucket = google_storage_bucket.static_iii.name
+}
+
+resource "google_cloudfunctions2_function" "extract" {
+  name        = var.function_1
+  location    = var.gcp_project_region
+  description = "function to extract data from strava and stage it in gcs bucket"
+
+  build_config {
+    runtime     = "python312"
+    entry_point = "extract_and_load_data"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.static_iii.name
+        object = google_storage_bucket_object.function_source_zip.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "256M"
+    timeout_seconds    = 300
+    service_account_email = var.service_account_email
+  }
 }
