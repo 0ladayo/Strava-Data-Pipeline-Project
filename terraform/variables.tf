@@ -1,85 +1,57 @@
 variable "gcp_project_id"{
     type = string
-    description = "The GCP Project ID where resources will be deployed"
+    description = "The GCP Project ID"
 }
 
 variable "gcp_project_region"{
     type = string
-    description = "The region where the GCP resources will be deployed"
+    description = "The GCP Project Region"
 }
 
 variable "gcp_project_zone"{
     type = string
-    description = "The Zone in the region where the GCP resources will be deployed"
+    description = "The GCP Project Zone"
 }
 
-variable "gcs_bucket_name"{
-    type = string
-    description = "Name of the Google Cloud Storage Bucket"
-}
-
-variable "gcs_bucket_name_II"{
-    type = string
-    description = "Name of the Second Google Cloud Storage Bucket"
-}
-
-variable "bigquery_dataset_id"{
-    type = string
-    description = "Name of the BigQuery dataset where tables will be stored"
-}
-
-variable "table_id"{
-    type = string
-    description = "The ID of the BigQuery table where data ingested are stored"
-}
-
-variable "state_file_local_path" {
-  description = "The local path to the state file."
-  type        = string
-  default     = "../data ingestion/extract/state.json"
-}
-
-variable "state_file_gcs_name" {
-  description = "The name of the state file in GCS."
-  type        = string
-  default     = "state.json"
-}
-
-variable "service_account_email" {
-  description = "The email of the service account to grant permissions to."
-  type        = string
-}
-
-variable "secret_manager_id" {
-  description = "The base ID for the Secret Manager secret."
-  type        = string
-}
-
-variable "client_id" {
+variable "strava_client_id" {
   description = "The Strava client ID."
   type        = string
   sensitive   = true
 }
 
-variable "client_secret" {
+variable "strava_client_secret" {
   description = "The Strava client secret."
   type        = string
   sensitive   = true
 }
 
-variable "refresh_token" {
+variable "strava_refresh_token" {
   description = "The Strava refresh token."
   type        = string
   sensitive   = true
 }
 
-variable "function_1" {
-  description = "The first extract and load function."
+variable "bigquery_dataset_id" {
   type        = string
-  sensitive   = true
+  description = "The BigQuery Dataset ID."
 }
 
-variable "gcs_bucket_name_III"{
-    type = string
-    description = "Name of the Third Google Cloud Storage Bucket"
+variable "bigquery_table_id" {
+  type        = string
+  description = "The BigQuery Table ID."
+}
+
+variable "strava_verify_token" {
+  type        = string
+  description = "The Strava verify token."
+}
+
+variable "gcs_bucket_name" {
+  description = "The First Bucket where the First Cloud Function Source are stored"
+  type        = string
+}
+
+variable "pubsub_topic_id" {
+  description = "The Pub/Sub Topic ID."
+  type        = string
 }

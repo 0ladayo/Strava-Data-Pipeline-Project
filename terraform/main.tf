@@ -4,6 +4,10 @@ terraform {
       source = "hashicorp/google"
       version = "6.40.0"
     }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "2.7.1"
+    }
   }
 }
 
@@ -13,212 +17,140 @@ provider "google" {
   zone    = var.gcp_project_zone
 }
 
-resource "google_storage_bucket" "static" {
-  name          = var.gcs_bucket_name
-  location      = var.gcp_project_region
-  storage_class = "STANDARD"
-  uniform_bucket_level_access = true
+resource "google_project_service" "gcp_services" {
+  for_each = toset([
+    "cloudfunctions.googleapis.com",
+    "secretmanager.googleapis.com",
+    "bigquery.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "pubsub.googleapis.com"
+  ])
+  service            = each.key
+  disable_on_destroy = false
 }
 
-resource "google_storage_bucket" "static_ii" {
-  name          = "${var.gcs_bucket_name_II}-${var.gcp_project_id}"
-  location      = var.gcp_project_region
-  storage_class = "STANDARD"
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket_iam_member" "static_iam" {
-  bucket = google_storage_bucket.static.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account_email}"
-}
-
-resource "google_storage_bucket_iam_member" "static_ii_iam" {
-  bucket = google_storage_bucket.static_ii.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account_email}"
-}
-
-resource "google_project_iam_member" "bq_job_user" {
-  project = var.gcp_project_id
-  role    = "roles/bigquery.jobUser"
-  member  = "serviceAccount:${var.service_account_email}"
-}
-
-resource "google_bigquery_dataset_iam_member" "bq_data_editor" {
-  project    = var.gcp_project_id
-  dataset_id = google_bigquery_dataset.default.dataset_id
-  role       = "roles/bigquery.dataEditor"
-  member     = "serviceAccount:${var.service_account_email}"
-}
-
-resource "google_bigquery_dataset" "default" {
-  dataset_id                  = var.bigquery_dataset_id
-  friendly_name               = var.bigquery_dataset_id
-  location                    = var.gcp_project_region
-  delete_contents_on_destroy  = false
-}
-
-resource "google_bigquery_table" "default" {
-  dataset_id = google_bigquery_dataset.default.dataset_id
-  table_id   = var.table_id
-  project    = var.gcp_project_id
-  deletion_protection = false
-  schema = <<EOF
-[
-  {
-    "name": "id",
-    "type": "INTEGER",
-    "mode": "REQUIRED",
-    "description": "The unique identifier for the activity"
-  },
-  {
-    "name": "distance",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "time",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": "Elapsed time in seconds"
-  },
-  {
-    "name": "elevation_high",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "elevation_low",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "elevation_gain",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "average_speed",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "maximum_speed",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "start_latitude",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "start_longitude",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "end_latitude",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "end_longitude",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-   {
-    "name": "average_cadence",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "start_datetime",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE",
-    "description": "The start time of the activity"
-  },
-  {
-    "name": "end_datetime",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE",
-    "description": "The end time of the activity"
-  }
-]
-EOF
+resource "google_service_account" "strava_service_account" {
+  account_id   = "strava-service-account"
+  display_name = "Service Account for Strava Data Pipeline"
+  project      = var.gcp_project_id
 }
 
 resource "google_secret_manager_secret" "client_secret_container" {
-  project   = var.gcp_project_id
-  secret_id = "${var.secret_manager_id}-${var.gcp_project_id}"
+  depends_on = [
+    google_project_service.gcp_services
+  ]
+  secret_id = "secret_manager_id-${var.gcp_project_id}"
   replication {
     auto {}
   }
 }
 
-resource "google_secret_manager_secret_version" "client_secret_value" {
+resource "google_secret_manager_secret_version" "strava_secret_version" {
   secret = google_secret_manager_secret.client_secret_container.id
-
+  
   secret_data = jsonencode({
-    strava_client_id     = var.client_id
-    strava_client_secret = var.client_secret
-    refresh_token        = var.refresh_token
-    gcs_bucket_name      = var.gcs_bucket_name
-    gcs_bucket_name_II   = var.gcs_bucket_name_II
-    table_id             = var.table_id
+    client_id            = var.strava_client_id
+    client_secret        = var.strava_client_secret
+    refresh_token        = var.strava_refresh_token
+    strava_verify_token  = var.strava_verify_token
   })
 }
 
-resource "google_secret_manager_secret_iam_member" "secret_accessor" {
-  secret_id = google_secret_manager_secret.client_secret_container.id
-  member    = "serviceAccount:${var.service_account_email}"
-  role      = "roles/secretmanager.secretAccessor"
+resource "google_project_iam_member" "secret_accessor" {
+  project = var.gcp_project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.strava_service_account.email}"
 }
 
-resource "google_storage_bucket" "static_iii" {
-  name          = "${var.gcs_bucket_name_III}-${var.gcp_project_id}"
+resource "google_pubsub_topic" "strava_activity_create" {
+  depends_on = [
+    google_project_service.gcp_services
+  ]
+  name    = var.pubsub_topic_id
+}
+
+resource "google_storage_bucket" "function_source_bucket" {
+  name          = "${var.gcs_bucket_name}-${var.gcp_project_id}"
   location      = var.gcp_project_region
   storage_class = "STANDARD"
   uniform_bucket_level_access = true
+  force_destroy = true
 }
 
-data "archive_file" "default" {
+data "archive_file" "strava_webhook_receiver_source" {
   type        = "zip"
-  output_path = "${path.module}/function-source.zip"
-  source_dir  = "../cloud_functions/extract/"
+  output_path = "${path.module}/strava-webhook-receiver-source.zip"
+  source_dir  = "../cloud_functions/pubsub"
   excludes = [
     "**/__pycache__",
     "**/*.pyc"
   ]
 }
 
-resource "google_storage_bucket_object" "function_source_zip" {
-  name   = "function-source.zip"
-  source = data.archive_file.default.output_path
-  bucket = google_storage_bucket.static_iii.name
+resource "google_storage_bucket_object" "strava_webhook_receiver_source_zip" {
+  name   = "strava-webhook-receiver-source-${data.archive_file.strava_webhook_receiver_source.output_base64sha256}.zip"
+  bucket = google_storage_bucket.function_source_bucket.name
+  source = data.archive_file.strava_webhook_receiver_source.output_path
 }
 
-resource "google_cloudfunctions2_function" "extract" {
-  name        = var.function_1
-  location    = var.gcp_project_region
-  description = "function to extract data from strava and stage it in gcs bucket"
+resource "google_cloudfunctions2_function" "strava_webhook_receiver" {
+  name     = "strava-webhook-receiver"
+  location = var.gcp_project_region
 
   build_config {
     runtime     = "python312"
-    entry_point = "extract_and_load_data"
+    entry_point = "main"
     source {
       storage_source {
-        bucket = google_storage_bucket.static_iii.name
-        object = google_storage_bucket_object.function_source_zip.name
+        bucket = google_storage_bucket.function_source_bucket.name
+        object = google_storage_bucket_object.strava_webhook_receiver_source_zip.name
       }
     }
+    service_account = google_service_account.strava_service_account.name
   }
 
   service_config {
     max_instance_count = 1
-    available_memory   = "256M"
-    timeout_seconds    = 300
-    service_account_email = var.service_account_email
+    min_instance_count = 0
+    available_memory   = "512Mi"
+    timeout_seconds    = 60
+    environment_variables = {
+      GCP_PROJECT_ID    = var.gcp_project_id
+      SECRET_MANAGER_ID = google_secret_manager_secret.client_secret_container.secret_id
+      TOPIC_ID          = var.pubsub_topic_id
+    }
+    ingress_settings = "ALLOW_ALL"
+    service_account_email = google_service_account.strava_service_account.email
   }
+}
+
+resource "google_project_iam_member" "storage_object_viewer" {
+  project = var.gcp_project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.strava_service_account.email}"
+}
+
+resource "google_project_iam_member" "build_log_writer" {
+  project = var.gcp_project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.strava_service_account.email}"
+}
+
+resource "google_project_iam_member" "artifact_registry_writer" {
+  project = var.gcp_project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.strava_service_account.email}"
+}
+
+resource "google_cloud_run_service_iam_member" "webhook_invoker" {
+  service  = google_cloudfunctions2_function.strava_webhook_receiver.name
+  location = google_cloudfunctions2_function.strava_webhook_receiver.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+resource "google_pubsub_topic_iam_member" "strava_webhook_publisher" {
+  topic  = google_pubsub_topic.strava_activity_create.id
+  role   = "roles/pubsub.publisher"
+  member = "serviceAccount:${google_service_account.strava_service_account.email}"
 }
