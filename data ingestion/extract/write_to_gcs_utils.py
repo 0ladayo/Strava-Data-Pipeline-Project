@@ -21,8 +21,8 @@ def write_to_gcs(stravadata_df, GCS_BUCKET_NAME, GCS_BUCKET_NAME_II, state_data)
             state_data['last_activity_dt'] = LAST_ACTIVITY_DT
             print('Successfully wrote new data')
             if not upload_json_object_to_gcs(GCS_BUCKET_NAME_II, 'state.json', state_data):
-                raise Exception("Failed to upload updated state.json to GCS. Halting execution.")
-            print('Successfully updated state.json in GCS.')
+                raise Exception("Failed to upload updated state.json to GCS")
+            print('Successfully updated state.json in GCS')
             return new_stravadata_df
         else:
             print('No new activities to load after filtering')

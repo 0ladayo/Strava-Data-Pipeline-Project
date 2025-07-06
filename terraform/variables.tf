@@ -47,11 +47,26 @@ variable "strava_verify_token" {
 }
 
 variable "gcs_bucket_name" {
-  description = "The First Bucket where the First Cloud Function Source are stored"
+  description = "The First Bucket where the First Cloud Function Source is stored"
   type        = string
 }
 
 variable "pubsub_topic_id" {
   description = "The Pub/Sub Topic ID."
+  type        = string
+}
+
+variable "gcs_bucket_name_ii" {
+  description = "The Second Bucket where the State.json is stored"
+  type        = string
+}
+
+variable "gcs_bucket_name_iii" {
+  description = "The Third where Strava Activity Parquet files are stored"
+  type        = string
+}
+
+variable "gcs_bucket_name_iv" {
+  description = "The Third Bucket where the Second Cloud Function Source is stored"
   type        = string
 }

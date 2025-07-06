@@ -37,4 +37,4 @@ def get_activity_data(activities):
             all_activities.append(data_dict)
         return all_activities
     except Exception as e:
-            raise 
+            raise ConnectionError(f'Could not get the activity data: {e}') from e

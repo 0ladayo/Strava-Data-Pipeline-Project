@@ -4,6 +4,8 @@
 # Terraform state and variables
 terraform/terraform.tfvars
 terraform/.terraform/
+terraform/strava-webhook-receiver-source.zip
+terraform/strva-activity-extract-source.zip
 *.tfstate
 *.tfstate.backup
 
@@ -18,6 +20,8 @@ __pycache__/
 
 # State files
 data ingestion/extract/state.json
+cloud_functions/extract/state.json
+
 
 # IDE configuration
 .vscode/ 

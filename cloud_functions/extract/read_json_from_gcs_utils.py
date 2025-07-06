@@ -1,8 +1,5 @@
-import os
 from google.cloud import storage
 import json
-
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../service_key.json' 
 
 def read_json_from_gcs(bucket_name, file_path):
     """
@@ -16,5 +13,4 @@ def read_json_from_gcs(bucket_name, file_path):
         data = json.loads(json_string)
         return data
     except Exception as e:
-        print(f"Error reading JSON from GCS: {e}")
-        raise
+        raise ConnectionError(f"Failed to read '{file_path}' from bucket '{bucket_name}': {e}") from e

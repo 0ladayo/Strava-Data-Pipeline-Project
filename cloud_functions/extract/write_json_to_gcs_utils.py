@@ -11,6 +11,6 @@ def upload_json_object_to_gcs(bucket_name, destination_blob_name, json_object):
         json_string = json.dumps(json_object, indent=2)
         blob.upload_from_string(json_string, content_type='application/json')
         print(f"JSON object uploaded to gs://{bucket_name}/{destination_blob_name}")
+        return True
     except Exception as e:
-        print(f"Failed to upload JSON object to GCS: {e}")
-        raise
+        raise ConnectionError(f"Failed to upload '{destination_blob_name}' to bucket '{bucket_name}': {e}") from e

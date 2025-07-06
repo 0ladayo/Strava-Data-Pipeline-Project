@@ -1,7 +1,6 @@
 import os
-from shared.secrets import access_secret_version, get_required_secret
+from secrets_utils import access_secret_version, get_required_secret
 from google.cloud import pubsub_v1
-
 
 try:
     secret_id = os.environ['SECRET_MANAGER_ID']

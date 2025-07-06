@@ -18,5 +18,4 @@ def refresh_access_token(STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, REFRESH_TOKEN, 
         return REFRESH_ACCESS_TOKEN, state_data
         
     except Exception as e:
-        print(f'Error refreshing token: {e}')
-        raise
+        raise ConnectionError(f'Error refreshing token: {e}') from e
