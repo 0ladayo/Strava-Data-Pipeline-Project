@@ -33,8 +33,10 @@ def main(request):
 
     elif request.method == 'POST':
         try:
+            print("Webhook received. Publishing message to Pub/Sub...")
             future = publisher.publish(topic_path, b'New activity created')
             future.result()  
+            print(f"Message published to {topic_path}.")
             return 'OK', 200
         except Exception as e:
             print(f"An error occurred while publishing to Pub/Sub: {e}")

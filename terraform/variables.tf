@@ -47,7 +47,7 @@ variable "strava_verify_token" {
 }
 
 variable "gcs_bucket_name" {
-  description = "The First Bucket where the First Cloud Function Source is stored"
+  description = "The First Bucket where the strava_webhook_receiver function source file (zipped) is stored"
   type        = string
 }
 
@@ -62,11 +62,16 @@ variable "gcs_bucket_name_ii" {
 }
 
 variable "gcs_bucket_name_iii" {
-  description = "The Third where Strava Activity Parquet files are stored"
+  description = "The Third Bucket where Strava Activity Parquet files are stored"
   type        = string
 }
 
 variable "gcs_bucket_name_iv" {
-  description = "The Third Bucket where the Second Cloud Function Source is stored"
+  description = "The Fourth Bucket where the strava_activity_extract function source file (zipped) is stored"
+  type        = string
+}
+
+variable "gcs_bucket_name_v" {
+  description = "The Fifth Bucket where the strava_activity_load function source file (zipped) is stored"
   type        = string
 }

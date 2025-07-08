@@ -1,7 +1,7 @@
 import os
 from secrets_utils import access_secret_version, get_required_secret
 import gcsfs
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from read_json_from_gcs_utils import read_json_from_gcs
 import json
 from refresh_access_token_utils import refresh_access_token
@@ -28,14 +28,14 @@ def main(event, context):
 
     if state_data:
         EXPIRES_AT = state_data['expires_at']
-        EXPIRES_AT_DT = datetime.fromtimestamp(int(EXPIRES_AT))
+        EXPIRES_AT_DT = datetime.fromtimestamp(int(EXPIRES_AT), tz=timezone.utc)
         LAST_ACTIVITY_DT = state_data['last_activity_dt']
     else:
         raise ValueError('state.json is empty or invalid')
 
     try:
-        if datetime.now() > EXPIRES_AT_DT:
-            ACCESS_TOKEN, state_data = refresh_access_token(STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, REFRESH_TOKEN, state_data)
+        if datetime.now(timezone.utc) > EXPIRES_AT_DT:
+            ACCESS_TOKEN, state_data = refresh_access_token(STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, REFRESH_TOKEN, state_data,  state_auth_bucket)
         else:
             ACCESS_TOKEN = state_data['access_token']
     except Exception as e:

@@ -4,8 +4,8 @@
 # Terraform state and variables
 terraform/terraform.tfvars
 terraform/.terraform/
-terraform/strava-webhook-receiver-source.zip
-terraform/strva-activity-extract-source.zip
+terraform/*.zip
+terraform/*.backup
 *.tfstate
 *.tfstate.backup
 
